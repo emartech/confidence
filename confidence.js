@@ -350,7 +350,7 @@
   };
 
   // Are these result statistically significant?
-  // (zscore^2 * stdErr * (1 - stdErr)) / marginErr^2
+  // (zscore^2 * rate * (1 - rate)) / marginErr^2
   Confidence.prototype.getRequiredSampleSize = function(variantID) {
     var rate = this.getRate(variantID);
     var numerator = (Math.pow(this._zScore, 2) * rate * (1 - rate));

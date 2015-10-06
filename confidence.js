@@ -352,11 +352,11 @@
   // Are these result statistically significant?
   // (zscore^2 * stdErr * (1 - stdErr)) / marginErr^2
   Confidence.prototype.getRequiredSampleSize = function(variantID) {
-    var standardError = this.getStandardError(variantID);
-    var numerator = (Math.pow(this._zScore, 2) * standardError * (1 - standardError));
+    var rate = this.getRate(variantID);
+    var numerator = (Math.pow(this._zScore, 2) * rate * (1 - rate));
     var denominator = Math.pow(this._marginOfError, 2);
 
-    var requiredSampleSize = Math.max((numerator/denominator), 100);
+    var requiredSampleSize = numerator/denominator;
     return requiredSampleSize;
   };
 

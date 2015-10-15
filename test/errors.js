@@ -332,18 +332,14 @@ module.exports['Get Result'] = {
 
     var result = confidence.getResult();
 
-    var expectedResult = 'With 95.00% confidence, the true population parameter of the';
-    expectedResult += ' "Variant A" variant will fall between 23.88% and 26.92%.';
+    var expectedResult = 'There is not enough data to determine a conclusive result.';
 
-    test.equal(result.hasWinner, true, 'There should be a winner');
-    test.equal(result.hasEnoughData, true, 'There should be enough data');
-    test.equal(result.winnerID, 'A', 'A should be the winnerID');
-    test.equal(result.winnerName, 'Variant A', 'Variant A should be the winnerName');
-    test.equal(result.confidencePercent, 95.00, 'Confidence percent should be 95.00');
-    test.deepEqual(result.confidenceInterval, {
-      min: 23.88,
-      max: 26.92
-    }, 'Confidence interval should not overlap');
+    test.equal(result.hasWinner, false, 'There should not be a winner');
+    test.equal(result.hasEnoughData, false, 'There should not be enough data');
+    test.equal(result.winnerID, null, 'None should be the winnerID');
+    test.equal(result.winnerName, null, 'None should be the winnerName');
+    test.equal(result.confidencePercent, null, 'Confidence percent should be null');
+    test.deepEqual(result.confidenceInterval, null, 'Confidence interval should be null');
     test.equal(result.readable, expectedResult , 'The result should have the long winning speech');
 
     test.done();
@@ -485,7 +481,9 @@ module.exports['Get Required Sample Size'] = {
 
     test.ok(confidence);
 
-    var requiredSampleSize = test.equal(confidence.getRequiredSampleSize('A'), 100, "If rate is 0, the required sample size should be 100");
+    var requiredSampleSize = confidence.getRequiredSampleSize('A');
+
+    test.equal(requiredSampleSize, 0, 'If rate is 0, the required sample size should be also 0');
 
     test.done();
   },
@@ -496,10 +494,13 @@ module.exports['Get Required Sample Size'] = {
     confidence.addVariant({
       id: 'B',
       name: 'Variant B',
+
       conversionCount: 101,
       eventCount: 101
     });
-    var requiredSampleSize = test.equal(confidence.getRequiredSampleSize('B'), 100, "If rate is 1, the required sample size should be 100");
+    var requiredSampleSize = confidence.getRequiredSampleSize('B');
+
+    test.equal(requiredSampleSize, 0, 'If rate is 1, the required sample size should be 0');
 
     test.done();
   },
@@ -518,8 +519,8 @@ module.exports['Has Enough Data'] = {
   confidence.addVariant({
       id: 'A',
       name: 'Variant A',
-      conversionCount: 2500,
-      eventCount: 3000
+      conversionCount: 10000,
+      eventCount: 500
     });
 
   test.equal(confidence.hasEnoughData('A'), true, 'This variant should have enough data');
@@ -528,11 +529,11 @@ module.exports['Has Enough Data'] = {
   confidence.addVariant({
       id: 'B',
       name: 'Variant B',
-      conversionCount: 5,
-      eventCount: 10
+      conversionCount: 100,
+      eventCount: 4
     });
 
-  test.equal(confidence.hasEnoughData('A'), true, 'This variant should not have enough data');
+  test.equal(confidence.hasEnoughData('B'), true, 'This variant should not have enough data');
 
   test.done();
   }
@@ -691,7 +692,10 @@ module.exports['zScore Probability'] = {
   // Also verifies that max confidence interval does not exceed 100%
   'Max meaningful zScore and confidence interval max <= 100%': function(test) {
 
-    var confidence = new Confidence({zScore: 6});
+    var confidence = new Confidence({
+      zScore: 1.96,
+      marginOfError: 0.01
+    });
 
     // create some variants
     confidence.addVariant({
@@ -709,16 +713,15 @@ module.exports['zScore Probability'] = {
 
     var result = confidence.getResult();
 
-    var expectedResult = 'With 100.00% confidence, the true population parameter of the';
-    expectedResult += ' "Variant B" variant will fall between 99.93% and 100%.';
+    var expectedResult = 'With 95.00% confidence, the true population parameter of the "Variant B" variant will fall between 99.97% and 100%.';
 
     test.equal(result.hasWinner, true, 'There should be a winner');
     test.equal(result.hasEnoughData, true, 'There should be enough data');
     test.equal(result.winnerID, 'B', 'B should be the winnerID');
     test.equal(result.winnerName, 'Variant B', 'Variant B should be the winnerName');
-    test.equal(result.confidencePercent, 100.00, 'Confidence percent should be 100');
+    test.equal(result.confidencePercent, 95.00, 'Confidence percent should be 100');
     test.deepEqual(result.confidenceInterval, {
-      min: 99.93,
+      min: 99.97,
       max: 100
     }, 'Confidence interval should not overlap');
     test.equal(result.readable, expectedResult , 'The result should have the long winning speech');
